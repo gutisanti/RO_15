@@ -244,7 +244,217 @@ class Curso:
             return None
 
 ______________________________________________________________________________________________________________________________________________________________
+Ahorcado preguntas
+from dataclasses import dataclass, field
 
+from ahorcado.modelo.datos import ProveedorPalabras
+
+LETRA_VACIA: str = "_"
+INTENTOS_MAXIMOS: int = 7
+
+
+class Palabra:
+
+    # TODO: Método inicializador
+
+    # TODO: Método contiene_letra
+
+    def posiciones_letra(self, letra: str) -> list[int]:
+        return [i for i, ch in enumerate(self.texto) if ch == letra]
+
+    # TODO: Método agregar_letra
+
+    # TODO: Método esta_completa
+
+    # TODO: Método especial
+
+
+# TODO: Definición de la clase Ahorcado
+
+    # TODO: Atributo intentos
+    letras_usadas: list[str] = field(default_factory=list, init=False)
+    proveedor_palabras: ProveedorPalabras = ProveedorPalabras()
+    palabra_objetivo: Palabra = None
+
+    def generar_texto(self) -> str:
+        return self.proveedor_palabras.proveer_palabra()
+
+    # TODO: Método iniciar_juego
+
+    # TODO: Método letra_usada
+
+    def palabra_completa(self) -> bool:
+        return self.palabra_objetivo.esta_completa()
+
+    # TODO: Método tiene_intentos_disponibles
+
+    # TODO: Método agregar_letra
+_______________________________________________________________________________________________________________________________________________________________
+Ahorcado
+
+from dataclasses import dataclass, field
+
+@dataclass
+class Palabra:
+    texto: str = ""
+    letras_adivinadas: set = field(default_factory=set)
+
+    def contiene_letra(self, letra: str) -> bool:
+        return letra in self.texto
+
+    def posiciones_letra(self, letra: str) -> list[int]:
+        return [i for i, ch in enumerate(self.texto) if ch == letra]
+
+    def agregar_letra(self, letra: str) -> None:
+        self.letras_adivinadas.add(letra)
+
+    def esta_completa(self) -> bool:
+        return set(self.texto) == self.letras_adivinadas
+
+
+from dataclasses import dataclass, field
+from ahorcado.modelo.datos import ProveedorPalabras
+
+@dataclass
+class Ahorcado:
+    intentos: int = 0
+    letras_usadas: list[str] = field(default_factory=list)
+    proveedor_palabras: ProveedorPalabras = ProveedorPalabras()
+    palabra_objetivo: Palabra = field(default=None, init=False)
+
+    def generar_texto(self) -> str:
+        return self.proveedor_palabras.proveer_palabra()
+
+    def iniciar_juego(self) -> None:
+        self.intentos = 0
+        self.letras_usadas = []
+        self.palabra_objetivo = Palabra(self.generar_texto())
+
+    def letra_usada(self, letra: str) -> bool:
+        return letra in self.letras_usadas
+
+    def tiene_intentos_disponibles(self) -> bool:
+        return self.intentos < INTENTOS_MAXIMOS
+
+    def agregar_letra(self, letra: str) -> str:
+        if letra in self.letras_usadas:
+            return "Ya has usado esa letra."
+
+        self.letras_usadas.append(letra)
+        if self.palabra_objetivo.contiene_letra(letra):
+            self.palabra_objetivo.agregar_letra(letra)
+            if self.palabra_completa():
+                return f"¡Ganaste! La palabra era: {self.palabra_objetivo.texto}"
+        else:
+            self.intentos += 1
+            if not self.tiene_intentos_disponibles():
+                return f"Perdiste. La palabra era: {self.palabra_objetivo.texto}"
+
+        return self.generar_estado_palabra()
+
+    def palabra_completa(self) -> bool:
+        return self.palabra_objetivo.esta_completa()
+
+    def generar_estado_palabra(self) -> str:
+        estado = [LETRA_VACIA if letra not in self.palabra_objetivo.letras_adivinadas else letra
+                  for letra in self.palabra_objetivo.texto]
+        return " ".join(estado)
+
+________________________________________________________________________________________________________________
+Otra forma de hacerlo
+import random
+
+LETRA_VACIA: str = "_"
+INTENTOS_MAXIMOS: int = 7
+
+class ProveedorPalabras:
+    def proveer_palabra(self):
+        palabras = ["python", "programacion", "ahorcado", "juego", "jugador"]
+        return random.choice(palabras)
+
+class Palabra:
+    def __init__(self, texto):
+        self.texto = texto
+        self.letras_adivinadas = set()
+
+    def contiene_letra(self, letra):
+        return letra in self.texto
+
+    def posiciones_letra(self, letra):
+        return [i for i, ch in enumerate(self.texto) if ch == letra]
+
+    def agregar_letra(self, letra):
+        self.letras_adivinadas.add(letra)
+
+    def esta_completa(self):
+        return set(self.texto) == self.letras_adivinadas
+
+class Ahorcado:
+    def __init__(self):
+        self.intentos = 0
+        self.letras_usadas = []
+        self.proveedor_palabras = ProveedorPalabras()
+        self.palabra_objetivo = None
+
+    def generar_texto(self):
+        return self.proveedor_palabras.proveer_palabra()
+
+    def iniciar_juego(self):
+        self.intentos = 0
+        self.letras_usadas = []
+        self.palabra_objetivo = Palabra(self.generar_texto())
+
+    def letra_usada(self, letra):
+        return letra in self.letras_usadas
+
+    def tiene_intentos_disponibles(self):
+        return self.intentos < INTENTOS_MAXIMOS
+
+    def agregar_letra(self, letra):
+        if letra in self.letras_usadas:
+            return "Ya has usado esa letra."
+
+        self.letras_usadas.append(letra)
+        if self.palabra_objetivo.contiene_letra(letra):
+            self.palabra_objetivo.agregar_letra(letra)
+            if self.palabra_completa():
+                return f"¡Ganaste! La palabra era: {self.palabra_objetivo.texto}"
+        else:
+            self.intentos += 1
+            if not self.tiene_intentos_disponibles():
+                return f"Perdiste. La palabra era: {self.palabra_objetivo.texto}"
+
+        return self.generar_estado_palabra()
+
+    def palabra_completa(self):
+        return self.palabra_objetivo.esta_completa()
+
+    def generar_estado_palabra(self):
+        estado = [LETRA_VACIA if letra not in self.palabra_objetivo.letras_adivinadas else letra
+                  for letra in self.palabra_objetivo.texto]
+        return " ".join(estado)
+
+    def jugar(self):
+        while True:
+            opcion = input("Elige una opción:\n1. Iniciar nuevo juego\n2. Salir\n")
+            if opcion == "1":
+                self.iniciar_juego()
+                print("Adivina la palabra: ", " ".join(self.generar_estado_palabra()))
+                while self.tiene_intentos_disponibles():
+                    letra = input("Ingresa una letra: ")
+                    resultado = self.agregar_letra(letra)
+                    print(resultado)
+                    if resultado.startswith("¡Ganaste!") or resultado.startswith("Perdiste."):
+                        break
+            elif opcion == "2":
+                print("¡Adiós!")
+                break
+            else:
+                print("Opción no válida. Por favor, elige una opción válida.")
+
+if __name__ == "__main__":
+    juego = Ahorcado()
+    juego.jugar()
 
 
 
